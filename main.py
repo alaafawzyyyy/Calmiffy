@@ -39,7 +39,8 @@ def compute_neutrosophic_values(risk: str, working_hours: int):
 
 def get_recommendation_from_file(risk: str, working_hours: int) -> Optional[str]:
     try:
-        df = pd.read_excel("burnout_recommendations_updated.xlsx")
+        file_url = 'https://drive.google.com/uc?export=download&id=1i3IjQeLXREZE56ZXEMPna09tGQe9Xxok'
+df = pd.read_excel(file_url)
         row = df[(df['risk'] == risk) & (df['working_hours'] == working_hours)]
         if not row.empty:
             return row.iloc[0]['recommendation']
