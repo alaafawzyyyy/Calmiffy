@@ -2,6 +2,10 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 import pandas as pd
+from encryption import encrypt, decrypt
+from schemas import Note, NoteIn, TextRequest
+from auth import authenticate_user, create_access_token, get_current_user, users_db
+from service import predict_text 
 
 app = FastAPI()
 
@@ -69,3 +73,8 @@ async def process_employee(employee: EmployeeInput):
         Falsity=F,
         Refined_Recommendation=refined
     )
+    # ------------------ API Endpoints ------------------
+@app.post("/predict")
+async def predict(request: TextRequest):
+    return predict_text(request.text)
+
