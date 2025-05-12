@@ -1,9 +1,8 @@
-
-fastapi
-uvicorn
-python-jose[cryptography]
-passlib[bcrypt]
-cryptography
-simpletransformers
-transformers
-torch
+fastapi==0.95.0
+uvicorn==0.22.0
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+cryptography==39.0.1
+simpletransformers==0.63.1
+transformers==4.30.0
+torch==2.1.0
