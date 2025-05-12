@@ -1,25 +1,41 @@
-# Use an official Python runtime as a parent image
-FROM python:3.9-slim AS build
+# Stage 1: Install dependencies
+FROM python:3.9-slim AS base
 
-# Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PORT=8000
 
-# Set the working directory in the container
+# System dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential gcc libffi-dev libssl-dev curl && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Set work directory
 WORKDIR /app
 
-# Copy only the requirements to leverage Docker cache
+# Copy only requirements first to leverage cache
 COPY requirements.txt .
 
-# Install dependencies in a single step and clean up cache
-RUN pip install --no-cache-dir -r requirements.txt && \
-    rm -rf /root/.cache
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application
+# Stage 2: Final image
+FROM python:3.9-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PORT=8000
+
+WORKDIR /app
+
+# Copy installed packages from previous stage
+COPY --from=base /usr/local/lib/python3.9 /usr/local/lib/python3.9
+COPY --from=base /usr/local/bin /usr/local/bin
+
+# Copy application code
 COPY . .
 
-# Expose the port the app runs on
+# Clean up __pycache__ and unnecessary files
+RUN find . -type d -name "__pycache__" -exec rm -r {} + || true
+
 EXPOSE 8000
 
-# Run the application
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
