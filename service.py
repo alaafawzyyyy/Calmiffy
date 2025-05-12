@@ -1,39 +1,34 @@
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from scipy.special import softmax
 import torch
-import os
 
-# Model ID from Hugging Face
 MODEL_NAME = "cardiffnlp/twitter-roberta-base-sentiment"
 
-# Load tokenizer and model
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME)
+# Load tokenizer and model (with optional local cache)
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, cache_dir="./model_cache")
+model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, cache_dir="./model_cache")
 
-# Check if CUDA (GPU) is available, if so, use it to speed up inference
+# Use GPU if available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
 
-# Labels for the model
 labels = ["negative", "neutral", "positive"]
 
 def predict_text(text: str):
-    # Tokenize input text
     encoded_input = tokenizer(text, return_tensors='pt', truncation=True).to(device)
     
     with torch.no_grad():
         output = model(**encoded_input)
 
-    # Apply softmax to get probabilities
     scores = softmax(output.logits[0].cpu().numpy())
     prediction = labels[scores.argmax()]
 
     # Map sentiment to risk levels
-    if scores[0] > 0.7:  # High negative sentiment
+    if scores[0] > 0.7:
         risk = "High"
-    elif scores[1] > 0.5:  # Neutral sentiment
+    elif scores[1] > 0.5:
         risk = "Moderate"
-    else:  # Positive sentiment
+    else:
         risk = "Low"
     
     return {
@@ -42,7 +37,6 @@ def predict_text(text: str):
         "risk": risk
     }
 
-# Example usage
-text = "not good"
-result = predict_text(text)
-print(result)
+# For test
+if __name__ == "__main__":
+    print(predict_text("not good"))
