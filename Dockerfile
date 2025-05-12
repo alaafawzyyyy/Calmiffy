@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM python:3.9-slim
+FROM python:3.9-slim AS build
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -8,11 +8,12 @@ ENV PYTHONUNBUFFERED=1 \
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy requirements first to leverage Docker cache
+# Copy only the requirements to leverage Docker cache
 COPY requirements.txt .
 
-# Install any needed packages
-RUN pip install --no-cache-dir -r requirements.txt
+# Install dependencies in a single step and clean up cache
+RUN pip install --no-cache-dir -r requirements.txt && \
+    rm -rf /root/.cache
 
 # Copy the rest of the application
 COPY . .
