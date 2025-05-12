@@ -9,19 +9,25 @@ MODEL_NAME = "cardiffnlp/twitter-roberta-base-sentiment"
 # Load tokenizer and model
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME)
+
+# Check if CUDA (GPU) is available, if so, use it to speed up inference
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model.to(device)
+
 # Labels for the model
 labels = ["negative", "neutral", "positive"]
 
 def predict_text(text: str):
     # Tokenize input text
-    encoded_input = tokenizer(text, return_tensors='pt', truncation=True)
+    encoded_input = tokenizer(text, return_tensors='pt', truncation=True).to(device)
+    
     with torch.no_grad():
         output = model(**encoded_input)
 
     # Apply softmax to get probabilities
-    scores = softmax(output.logits[0].numpy())
+    scores = softmax(output.logits[0].cpu().numpy())
     prediction = labels[scores.argmax()]
-    
+
     # Map sentiment to risk levels
     if scores[0] > 0.7:  # High negative sentiment
         risk = "High"
